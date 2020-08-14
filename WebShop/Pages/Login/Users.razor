@@ -1,0 +1,52 @@
+﻿@page "/login/users"
+@inject Service.ILoginStateService loginService
+@inject Service.IUserService userService
+@inject Service.IDbService<Model.WS_UserRank> userRankService
+
+@if (loginService.CheckRank(Model.Rank.Admin).Result)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">E-Mail</th>
+                <th scope="col">First Name</th>
+                <th scope="col">Last Name</th>
+                <th scope="col">Address</th>
+                <th scope="col">Zip</th>
+                <th scope="col">District</th>
+                <th scope="col">Rank</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in userList)
+            {
+                var rankListForUser = userRankList.Where(x => x.User == user).ToList();
+                <tr>
+                    <td>@user.Id</td>
+                    <td>@user.Email</td>
+                    <td>@user.Name</td>
+                    <td>@user.LastName</td>
+                    <td>@user.Adresse</td>
+                    <td>@user.PostNr.PostNr</td>
+                    <td>@user.PostNr.Distrikt</td>
+                    <td>  @foreach (var rank in rankListForUser) {@rank.Rank.Rank }</td>
+                    <td><a class="oi oi-person" href="#"></a></td>
+                </tr>
+            }
+
+        </tbody>
+    </table>
+}
+@code {
+
+    private List<Model.WS_User> userList = new List<Model.WS_User>();
+        private List<Model.WS_UserRank> userRankList = new List<Model.WS_UserRank>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        userList = await userService.GetUsers();
+        userRankList =(List<Model.WS_UserRank>) await userRankService.Repository.GetAll();
+    }
+}

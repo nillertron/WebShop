@@ -1,0 +1,50 @@
+﻿@page "/order/all"
+@inject Service.ILoginStateService loginService
+@inject Service.IOrdreService ordreService
+@if (loginService.CheckRank(Model.Rank.Admin).Result)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Id</th>
+                <th scope="col">Ordered date</th>
+                <th scope="col">Ordered by</th>
+                <th scope="col">Order sum</th>
+                <th scope="col">Paid</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var o in ordreListe)
+            {
+            <tr class="@(o.Paid?"bg-success":"bg-danger")">
+                <td>@o.Id</td>
+                <td>@o.Bestilt</td>
+                <td>@o.User.Name</td>
+                <td>@CalculateSum(o)</td>
+                <td>@(o.Paid?"Paid":"Not Paid")</td>
+            </tr>
+
+            }
+        </tbody>
+    </table>
+
+}
+@code {
+    private List<Model.WS_Ordre> ordreListe = new List<Model.WS_Ordre>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        ordreListe = await ordreService.GetAll();
+    }
+    private double CalculateSum(Model.WS_Ordre ordre)
+    {
+        var amount = 0.00;
+        ordre.OrdreLinjer.ForEach(x =>
+        {
+            amount += (x.EnhedsPris * x.Antal);
+        });
+        return amount;
+    }
+}

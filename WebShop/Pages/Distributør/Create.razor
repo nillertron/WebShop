@@ -1,0 +1,39 @@
+﻿@page "/vendor/create"
+@inject Service.ILoginStateService loginService
+@inject Service.IDbService<Model.WS_Distributør> dbService
+@if (loginService.CheckRank(Model.Rank.Admin).Result)
+{
+    <div class="form-group">
+        <EditForm Model="@model" OnValidSubmit="OnSucces">
+            <DataAnnotationsValidator></DataAnnotationsValidator>
+            <ValidationSummary></ValidationSummary>
+            @msg<br />
+            <label for="navn">Name</label>
+            <InputText class="form-control" id="navn" @bind-Value="@model.Navn" placeholder="Name"></InputText>
+            <label for="Adress">Adress</label>
+            <InputText class="form-control" id="Adress" @bind-Value="@model.Adresse" placeholder="Adress"></InputText>
+            <label for="CVR">CVR</label>
+            <InputText class="form-control" id="CVR" @bind-Value="@model.CVR" placeholder="CVR"></InputText>
+            <button class="btn btn-primary" type="submit">Submit</button>
+        </EditForm>
+        </div>
+        }
+
+
+
+        @code {
+    private Model.WS_Distributør model = new Model.WS_Distributør();
+        private string msg = string.Empty;
+        private async Task OnSucces()
+        {
+            try
+            {
+                dbService.Repository.Insert(model);
+                msg = "Created";
+            }
+            catch (Exception ex)
+            {
+                msg = ex.Message;
+            }
+        }
+        }

@@ -1,0 +1,53 @@
+﻿@inject IJSRuntime JsRuntime
+@inject Service.ILoginStateService loginService
+    <ul class="nav nav-pills justify-content-center" style="padding:0">
+        <li class="nav-item">
+            <a style="color:white;line-height:80px" id="btn1" @onclick="@(e => ChangeActiveButton("btn1"))" class="nav-link active" href="/news">Latest Products</a>
+        </li>
+        <li class="nav-item">
+            <a style="color:white;line-height:80px" id="btn2" @onclick="@(e => ChangeActiveButton("btn2"))" class="nav-link" href="/catalogue">Catalogue</a>
+        </li>
+        <li class="nav-item">
+            <a style="color:white;line-height:80px" id="btn3" @onclick="@(e => ChangeActiveButton("btn3"))" class="nav-link" href="/discount">Discounts</a>
+        </li>
+        @if (!GetLoginState())
+        {
+            <li class="nav-item">
+                <a style="color:white;line-height:80px" id="btn4" @onclick="@(e => ChangeActiveButton("btn4"))" class="nav-link" href="/login">Login</a>
+            </li>
+        }
+        else
+        {
+            <li class="nav-item">
+                <a href="#" style="color:white;line-height:80px" id="btn4" class="nav-link" @onclick="@LogOut">Log Out</a>
+            </li>
+        }
+
+    </ul>
+@code {
+    private string oldFocus = "btn1";
+    private async Task ChangeActiveButton(string btnId)
+    {
+        await JsRuntime.InvokeVoidAsync("SetActiveNavItem",oldFocus,btnId);
+        oldFocus = btnId;
+    }
+    private async Task LogOut()
+    {
+        await loginService.Logout();
+    }
+    private bool GetLoginState()
+    {
+        var online = false;
+        var result = new Task(async () => online = await loginService.GetLoginState());
+        result.Start();
+        result.Wait();
+        return online;
+    }
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        loginService.LoggedIn += StateHasChanged;
+    }
+
+
+}

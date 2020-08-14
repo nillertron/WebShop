@@ -1,0 +1,33 @@
+﻿@inject Service.IVareService service
+@inject NavigationManager navigation
+    <input @bind="selectedId" type="text" @oninput="@(async e => await Search(e.Value.ToString()))" placeholder="Search" class="form-control" style="display:inline;margin-top:30px; width:70%" list="1" />
+    <datalist id="1">
+        @foreach (var result in vareListe)
+        {
+            <option value="@result.Navn"></option>
+        }
+    </datalist>
+@code {
+    private List<Model.WS_Vare> _vareListe = new List<Model.WS_Vare>();
+    private List<Model.WS_Vare> vareListe = new List<Model.WS_Vare>();
+    private string _selectedId;
+    private string selectedId { get => _selectedId; set { _selectedId = value; LoadPage(value); } }
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        _vareListe = await service.GetAllVare();
+    }
+    private async Task Search(string searchWord)
+    {
+        vareListe = _vareListe.Where(x => x.Navn.ToLower().Contains(searchWord.ToLower())).ToList();
+        StateHasChanged();
+    }
+    private void LoadPage(string value)
+    {
+        var vare = _vareListe.Where(x=>x.Navn == value).FirstOrDefault();
+        if(vare != null)
+        {
+         navigation.NavigateTo("vare/details/" + vare.Id);
+        }
+    }
+}

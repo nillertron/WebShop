@@ -1,0 +1,78 @@
+﻿@inject Service.IOrdreService service
+@inject Service.ILoginStateService loginState
+@page  "/ordre"
+<h3>Ordre</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Name</th>
+            <th scope="col">Unit Price</th>
+            <th scope="col">Amount</th>
+            <th scope="col">Subtotal</th>
+
+        </tr>
+    </thead>
+    <tbody>
+
+        @foreach (var v in service.ordre.OrdreLinjer)
+        {
+            <tr>
+                <td>@v.Vare.Id</td>
+                <td>@v.Vare.Navn</td>
+                <td>$@v.EnhedsPris</td>
+                <td>@v.Antal</td>
+                <td>$@(v.Antal * v.EnhedsPris)</td>
+                <td><i class="oi oi-plus" @onclick="@(async e=> await AddOne(v.Vare))"></i></td>
+                <td><i class="oi oi-minus" @onclick="(async e=> await subtractOne(v.Vare))"></i></td>
+            </tr>
+        }
+
+    </tbody>
+</table>
+<p>Total: $@totalSum</p>
+<a href="@(Task.Run(async () => await GetLoginOrPlaceOrderPageLink()).Result)" class="btn btn-success">Place Order</a>
+<button class="btn btn-danger" @onclick="@(async () => { await service.ResetOrder(); totalSum = await service.CalculateTotal(); })">Reset</button>
+
+@code {
+    private double totalSum = 0.00;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        totalSum = await service.CalculateTotal();
+
+    }
+    private async Task AddOne(Model.WS_Vare v)
+    {
+        await service.AddVare(v, 1);
+        totalSum = await service.CalculateTotal();
+
+    }
+    private async Task subtractOne(Model.WS_Vare v)
+    {
+        await service.RemoveVare(v, 1);
+        totalSum = await service.CalculateTotal();
+
+    }
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        service.VareChanged += StateHasChanged;
+    }
+
+    private async Task<string> GetLoginOrPlaceOrderPageLink()
+    {
+        string url = string.Empty;
+        if(await loginState.GetLoginState())
+        {
+            url = "/order/confirm";
+        }
+        else
+        {
+            url = "/login";
+        }
+        return url;
+    }
+
+}

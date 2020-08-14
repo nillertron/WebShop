@@ -1,0 +1,35 @@
+﻿@inject Service.IOrdreService service
+<div class="d-inline d-xl-inline" style="display:inline-block">
+    <a href="/ordre" class="oi oi-cart d-inline" style="font-size:x-large; color:white"></a>
+    <p class="d-inline p-2">@amount</p>
+    <p class="d-inline p-2">$ @price</p>
+</div>
+
+@code {
+    private double price { get => GetTotalPrice(); }
+    private int amount { get => GetTotalGoodsAmount(); }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        service.VareChanged += StateHasChanged;
+    }
+    private double GetTotalPrice()
+    {
+        var price = 0.00;
+        foreach(var p in service.ordre.OrdreLinjer)
+        {
+            price += p.EnhedsPris * p.Antal;
+        }
+        return price;
+    }
+    private int GetTotalGoodsAmount()
+    {
+        var amount = 0;
+        foreach(var a in service.ordre.OrdreLinjer)
+        {
+            amount += a.Antal;
+        }
+        return amount;
+    }
+}

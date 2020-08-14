@@ -1,0 +1,42 @@
+﻿@inherits LayoutComponentBase
+@inject IJSRuntime JsRuntime
+    <div id="Main" class="container-fluid" style="font-family:Calibri">
+        <div class="container-fluid" style="position:fixed; padding:0; z-index:999;">
+            <div class="row" style="background-image:repeating-linear-gradient(to right,#171A5E, #3C4077); color:white; position:relative; height:100%">
+                <div class="col-xl-3" style="padding:0"><img class="d-xl-block d-none mx-auto" src="/img/topimg.png" style="" /></div>
+                <div class="col-sm-3 justify-content-center d-xl-block"><SearchTopBar></SearchTopBar></div>
+                <div id="collapsebar" class="col-xl-3" role="navigation" style="position:relative"><TopNavBar></TopNavBar></div>
+                <div class="col-sm-3" style="padding-top:35px;"><TopCartBar></TopCartBar></div>
+            </div>
+        </div><br />
+        <div style="height:5rem"></div>
+        <div class="container-fluid" style="padding:0; position:relative">
+            <div class="row" style="background-color:	#ffffff; position:relative">
+                <div class="col-sm-2"><AdminPanel></AdminPanel></div>
+                <div class="col-sm-8">
+                    <div class="jumbotron overflow-auto">
+                        @Body
+                    </div>
+                </div>
+                <div class="col-sm-2"></div>
+            </div>
+        </div>
+            <div style="height:10rem;"></div>
+          
+        <div id="BottomBar" class="row fixed-bottom d-xl-flex d-none overflow-hidden" style="transition:height 1s; height:15rem;">
+            <div class="col-sm-12">
+                <BottomBar></BottomBar>
+            </div>
+        </div>
+    </div>
+@code{ 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if(firstRender)
+        {
+            await JsRuntime.InvokeVoidAsync("Scroll");
+        }
+    }
+}
+

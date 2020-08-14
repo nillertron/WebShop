@@ -1,0 +1,138 @@
+﻿@inject IWebHostEnvironment env
+@inject Service.IVareService service
+@inject Service.IDbService<Model.WS_Distributør> distributørService
+@inject Service.IDbService<Model.WS_Category> kategoriService
+
+@inject Service.IPictureService pictureService
+@inject Service.ILoginStateService loginService
+@using System.IO;
+@page "/vare/create"
+@if (Rank)
+{
+
+    <div class="form-group">
+        <EditForm Model="@model" OnValidSubmit="OnValidSubmit">
+            <DataAnnotationsValidator></DataAnnotationsValidator>
+            <ValidationSummary></ValidationSummary>
+            <label for="navn">Name</label>
+            <InputText id="navn" style="width:50%" class="form-control" placeholder="Name" @bind-Value="@model.Navn"></InputText><br />
+            <label for="desc">Description</label>
+            <InputTextArea id="desc" style="min-height:10rem" class="form-control" placeholder="Description" @bind-Value="@model.Beskrivelse"></InputTextArea><br />
+            <label for="pris">Price</label>
+            <InputNumber style="width:10%" id="pris" class="form-control" placeholder="Sale Price" @bind-Value="@model.Pris"></InputNumber><br />
+            <label for="indkøbs">Cost Price</label>
+            <InputNumber style="width:10%" id="indkøbs" class="form-control" placeholder="Vendor Price" @bind-Value="@model.IndkøbsPris"></InputNumber><br />
+            <label for="lager">In Stock</label>
+            <InputNumber style="width:10%" id="lager" class="form-control" placeholder="In stock" @bind-Value="@model.AntalLager"></InputNumber><br />
+            <select @bind="@model.Distributør.Id">
+                @foreach (var d in distributørListe)
+                {
+                    <option value="@d.Id">@d.Navn</option>
+                }
+            </select><br />
+            <select @bind="@model.Category.Id">
+                @foreach (var c in categoryList)
+                {
+                    <option value="@c.Id">@c.Name</option>
+                }
+            </select><br />
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+    <BlazorInputFile.InputFile multiple OnChange="FileSelected"></BlazorInputFile.InputFile>
+    <div class="card-deck">
+
+        @foreach (var i in model.PictureList)
+        {
+            <div id="@i.Id" class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <img class="img-thumbnail" src="@i.Url" />
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-danger" @onclick="@(async () => await DeletePhoto(i.Id))">Delete</button>
+                    </div>
+                </div>
+            </div>
+
+        }
+    </div>
+    @msg
+}
+else
+{
+    <p>No acces</p>
+}
+@code {
+    private string msg = string.Empty;
+    private Model.WS_Vare model = new Model.WS_Vare();
+    private List<Model.WS_Distributør> distributørListe = new List<Model.WS_Distributør>();
+    private List<Model.WS_Category> categoryList = new List<Model.WS_Category>();
+    private string selectedId = string.Empty;
+    private bool Rank { get => loginService.CheckRank(Model.Rank.Admin).Result; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        model.Distributør = new Model.WS_Distributør { Id = 1 };
+        model.Category = new Model.WS_Category { Id = 1 };
+        var col = await distributørService.Repository.GetAll();
+        distributørListe = col.ToList();
+        var col2 = await kategoriService.Repository.GetAll();
+        categoryList = col2.ToList();
+
+    }
+
+    private async Task OnValidSubmit()
+    {
+        model.Oprettet = DateTime.Now;
+        try
+        {
+            model.Distributør = await distributørService.Repository.Get(model.Distributør.Id);
+            model.Category = await kategoriService.Repository.Get(model.Category.Id);
+            await service.InsertVare(model);
+            msg = "oprettet";
+
+        }
+        catch (Exception e)
+        {
+            msg = e.Message;
+        }
+    }
+    private async Task DeletePhoto(int id)
+    {
+        try
+        {
+            var photo = model.PictureList.Where(x => x.Id == id).FirstOrDefault();
+            model.PictureList.Remove(photo);
+            var rootPath = env.WebRootPath;
+            await pictureService.DeletePictureFile(rootPath, photo);
+        }
+        catch (Exception e)
+        {
+            msg = e.Message;
+        }
+        StateHasChanged();
+
+    }
+    private async Task FileSelected(BlazorInputFile.IFileListEntry[] files)
+    {
+        var path = env.WebRootPath;
+        if (files != null)
+        {
+            foreach (var f in files)
+            {
+                try
+                {
+                    model.PictureList.Add(await pictureService.SaveFile(f, path));
+                    msg = "Uploadet";
+                    StateHasChanged();
+                }
+                catch (Exception e)
+                {
+                    msg = e.Message;
+                }
+            }
+        }
+    }
+}

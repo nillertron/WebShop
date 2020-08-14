@@ -1,0 +1,36 @@
+﻿@page "/vare/details/{id:int}"
+@inject Service.IVareService service
+@inject Service.IOrdreService ordreService
+
+<h3>@current.Navn</h3>
+<p>@current.Beskrivelse</p>
+<p>@current.DisplayPrice</p>
+<button class="btn-success" @onclick="@AddVare">Add To Cart</button>
+<p>In stock: @current.AntalLager</p>
+@if (current.PictureList != null)
+{
+    foreach (var pic in current.PictureList)
+    {
+        <div class="col-lg-4">
+            <img class="img-thumbnail" src="@pic.Url" />
+        </div>
+    }
+}
+
+@code {
+    private int _id;
+    [Parameter]
+    public int Id { get => _id; set { _id = value; OnInitializedAsync(); } }
+    private Model.WS_Vare current = new Model.WS_Vare();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        current = await service.GetVare(Id);
+    }
+
+    private async Task AddVare()
+    {
+        await ordreService.AddVare(current,1);
+    }
+}

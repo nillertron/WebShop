@@ -1,0 +1,73 @@
+﻿@page "/vare/edit/{id:int}"
+@inject Service.IVareService service
+@inject Service.IDbService<Model.WS_Distributør> distributørService
+@inject Service.IDbService<Model.WS_Category> kategoriService
+@inject Service.ILoginStateService loginService
+@if(loginService.CheckRank(Model.Rank.Admin).Result)
+{
+    <div class="form-group">
+        @message
+        <EditForm Model="@model" OnValidSubmit="Succes">
+            <DataAnnotationsValidator></DataAnnotationsValidator>
+            <ValidationSummary></ValidationSummary>
+            <label for="navn">Name</label>
+            <InputText class="form-control" id="navn" placeholder="Name" @bind-Value="model.Navn"></InputText>
+            <label for="Beskrivelse">Description</label>
+            <InputTextArea class="form-control" id="Beskrivelse" placeholder="Description" @bind-Value="model.Beskrivelse"></InputTextArea>
+            <label for="price">price</label>
+            <InputNumber class="form-control" id="price" placeholder="Price" @bind-Value="model.Pris"></InputNumber>
+            <label for="indkøbsPris">Cost Price</label>
+            <InputNumber class="form-control" id="indkøbsPris" placeholder="Cost Price" @bind-Value="model.IndkøbsPris"></InputNumber>
+            <label for="stock">In stock</label>
+            <InputNumber class="form-control" id="stock" placeholder="In stock" @bind-Value="model.AntalLager"></InputNumber>
+            <label for="discount">Discount %</label>
+            <InputNumber class="form-control" id="discount" placeholder="Discount" @bind-Value="model.Discount"></InputNumber>
+            <select @bind="@model.Distributør.Id">
+                @foreach(var d in distributørListe)
+                {
+                    <option value="@d.Id">@d.Navn</option>
+                }
+            </select><br />
+            <select @bind="@model.Category.Id">
+                @foreach (var d in categoryList)
+                {
+                    <option value="@d.Id">@d.Name</option>
+                }
+            </select><br />
+            <button class="btn btn-primary" type="submit">Edit</button>
+        </EditForm>
+    </div>
+}
+
+@code {
+    private Model.WS_Vare model = new Model.WS_Vare();
+    private List<Model.WS_Distributør> distributørListe = new List<Model.WS_Distributør>();
+    private List<Model.WS_Category> categoryList = new List<Model.WS_Category>();
+    [Parameter]
+    public int Id { get; set; }
+    private string message = string.Empty;
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        model = await service.GetVare(Id);
+        var col = await distributørService.Repository.GetAll();
+        distributørListe = col.ToList();
+        var col2 = await kategoriService.Repository.GetAll();
+        categoryList = col2.ToList();
+    }
+    private async Task Succes()
+    {
+        model.Category = categoryList.Where(x => x.Id == model.Category.Id).FirstOrDefault();
+        model.Distributør = distributørListe.Where(x => x.Id == model.Distributør.Id).FirstOrDefault();
+        try
+        {
+            await service.UpdateVare(model);
+            message = "Updated";
+
+        }
+        catch(Exception ex)
+        {
+            message = ex.Message;
+        }
+    }
+}

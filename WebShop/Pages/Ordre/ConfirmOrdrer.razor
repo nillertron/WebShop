@@ -1,0 +1,67 @@
+﻿@page "/order/confirm"
+@page "/order/confirm/{id}"
+@inject Service.ILoginStateService loginService
+@inject Service.IOrdreService ordreService
+@inject Service.IPaypalApiService paypal
+@inject IJSRuntime jsRuntime
+@using Microsoft.Extensions.DependencyInjection
+@inject IServiceProvider serviceProvider
+@if (id != null)
+{
+    @msg
+}
+else
+{
+    <div class="alert alert-info">
+        <p>Verify the information here is correct, if it's not go update your personal information in the user panel and come back to place your order</p>
+    </div>
+    <form class="form-group">
+        <input class="form-control" readonly="readonly" value="@loginService.CurrentUser.Name" />
+        <input class="form-control" readonly="readonly" value="@loginService.CurrentUser.LastName" />
+        <input class="form-control" readonly="readonly" value="@loginService.CurrentUser.Adresse" />
+        <input class="form-control" readonly="readonly" value="@loginService.CurrentUser.PostNr.PostNr" />
+        <input class="form-control" readonly="readonly" value="@loginService.CurrentUser.PostNr.Distrikt" />
+        <input class="form-control" readonly="readonly" value="@loginService.CurrentUser.Email" />
+        <input @bind="@acceptTerms" class="form-check-inline" type="checkbox" /><p style="display:inline">This is a mock web shop, and if you chose to pay here you will not get anything for your money. Click to accept</p><br />
+        @if (!acceptTerms)
+        {
+            <button class="btn btn-success disabled" type="button" disabled>Go to payment</button>
+
+        }
+        else
+        {
+            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal" @onclick="@(async () => await Pay())">Go to payment</button>
+        }
+    </form>
+    <WebShop.Components.Modal title="Pay">
+        <div class="embed-responsive embed-responsive-16by9 z-depth-1">
+            <iframe class="embed-responsive-item" src="@payUrl" style="height: 101%"
+                    allowfullscreen></iframe>
+        </div>
+    </WebShop.Components.Modal>
+}
+
+
+@code {
+    [Parameter]
+    public string id { get; set; } = string.Empty;
+    private bool acceptTerms = false;
+    private string payUrl = string.Empty;
+    private string msg = "Order captured";
+
+    private async Task Pay()
+    {
+        try
+        {
+            await ordreService.Create();
+        }
+        catch (Exception ex)
+        {
+
+        }
+        payUrl = await paypal.CreateOrder(ordreService.ordre);
+        await jsRuntime.InvokeVoidAsync("ToggleModal");
+        StateHasChanged();
+    }
+
+}

@@ -1,0 +1,36 @@
+﻿@page "/category/create"
+@inject Service.ILoginStateService loginService
+@inject Service.IDbService<Model.WS_Category> dbService
+@if (loginService.CheckRank(Model.Rank.Admin).Result)
+{
+    <div class="form-group">
+        <EditForm Model="model" OnValidSubmit="OnSucces">
+            <DataAnnotationsValidator></DataAnnotationsValidator>
+            <ValidationSummary></ValidationSummary>
+            @msg<br />
+            <label for="name">Name</label>
+            <InputText class="form-control" id="name" placeholder="Name" @bind-Value="model.Name"></InputText>
+            <label for="desc">Description</label>
+            <InputTextArea class="form-control" id="desc" placeholder="Enter description" @bind-Value="model.Description"></InputTextArea>
+            <button class="btn btn-primary" type="submit">Submit</button>
+        </EditForm>
+    </div>
+}
+
+@code {
+    private Model.WS_Category model = new Model.WS_Category();
+    private string msg = string.Empty;
+
+    private async Task OnSucces()
+    {
+        try
+        {
+            await dbService.Repository.Insert(model);
+            msg = "Created";
+        }
+        catch (Exception ex)
+        {
+            msg = ex.Message;
+        }
+    }
+}

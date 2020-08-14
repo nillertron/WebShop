@@ -1,0 +1,45 @@
+﻿@inject Service.ILoginStateService service
+@page "/login"
+@inject IJSRuntime jsRuntime
+@message
+@if (!loggedIn)
+{
+    <h3>Login or create account</h3>
+    <form class="form-group">
+        <label for="mail">E-mail</label>
+        <input id="mail" class="form-control" type="email" @bind="@email" placeholder="Enter e-mail" style="width:35%" />
+        <label for="password">Password</label>
+        <input id="password" class="form-control" type="password" @bind="@passWord" placeholder="Password" style="width:35%" />
+        <button style="display:inline" tabindex="1" class="btn btn-primary" type="reset" @onclick="attemptLogin">Login</button>
+        <button style="display:inline" tabindex="2" type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal" @onclick="@(async () => await ToggleModal())">Create account</button>
+
+    </form>
+    <WebShop.Components.Modal title="Create Account"><CreateAccount></CreateAccount></WebShop.Components.Modal>
+}
+
+
+@code {
+    string email = string.Empty;
+    string passWord = string.Empty;
+    string message = string.Empty;
+    bool loggedIn = false;
+    protected override async Task OnInitializedAsync()
+    {
+        loggedIn = await service.GetLoginState();
+        if (loggedIn)
+            message = "You are already logged in";
+    }
+    private async Task attemptLogin()
+    {
+        loggedIn = await service.Login(email, passWord);
+        if (loggedIn)
+            message = "Logged in";
+        else
+            message = "Something went wrong";
+        StateHasChanged();
+    }
+    private async Task ToggleModal()
+    {
+        await jsRuntime.InvokeVoidAsync("ToggleModal");
+    }
+}

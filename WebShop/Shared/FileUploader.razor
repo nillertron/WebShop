@@ -1,0 +1,16 @@
+﻿@inject IJSRuntime JsRuntime
+<form method="post" enctype="multipart/form-data">
+    <input id="File" type="file" name="files[]" multiple />
+    <input type="submit" class="btn btn-success" value="Upload" />
+</form>
+<progress></progress>
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if(firstRender)
+        {
+            await JsRuntime.InvokeVoidAsync("UploadImage");
+        }
+    }
+}

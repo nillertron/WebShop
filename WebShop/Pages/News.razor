@@ -1,0 +1,57 @@
+﻿@using  Service
+@inject IVareService service
+@inject IOrdreService ordreService
+@using Model;
+@page "/news"
+<br />
+<div class="card-deck">
+    @for (int i = 0; i < 10; i++)
+    {
+        int count = i;
+        if (i >= vareListe.Count)
+            break;
+        <div class="col-md-12 col-lg-4 d-flex align-items-stretch" style="">
+            <div class="card">
+                <div class="card-header">
+                    <h5>@vareListe[i].Navn</h5>
+                </div>
+                <div class="card-img-top" style="display:inline-block; position:relative">
+                    @if (vareListe[i].Discounted == true)
+                    {
+                        <div class="circle" style="">
+                            <p>@(vareListe[i].Discount.ToString() + "%")</p>
+                        </div>
+                    }
+                    <img class="img-thumbnail" style="width:100%" src="@((vareListe[i].PictureList.Count != 0) ? vareListe[i].PictureList[0].Url:"https://s3.amazonaws.com/cdn-origin-etr.akc.org/wp-content/uploads/2017/11/12234558/Chinook-On-White-03.jpg")" />
+                </div>
+                <div class="card-body">
+                    <p class="card-text">@vareListe[i].Beskrivelse</p>
+                    <hr />
+                    <p>Price: @vareListe[i].DisplayPrice</p>
+                    <p>In stock: @vareListe[i].AntalLager</p>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-success" @onclick="@(async () => { await AddVare(vareListe[count].Id); })">Add To Cart</button> <a class="btn btn-primary" href="@("/vare/details/"+vareListe[i].Id)">Info</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+@code {
+    
+    List<WS_Vare> vareListe = new List<WS_Vare>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await  base.OnInitializedAsync();
+        vareListe = await service.GetAllVare();
+        vareListe = vareListe.OrderByDescending(x => x.Oprettet).ToList();
+    }
+
+    private async Task AddVare(int vareId)
+    {
+        var vare = vareListe.Where(o => o.Id == vareId).FirstOrDefault();
+        await ordreService.AddVare(vare, 1);
+
+    }
+}

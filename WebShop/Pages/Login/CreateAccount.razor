@@ -1,0 +1,49 @@
+﻿@inject Service.IUserService service
+
+<EditForm Model="model" OnValidSubmit="SuccesSubmit">
+    <DataAnnotationsValidator></DataAnnotationsValidator>
+    <ValidationSummary></ValidationSummary>
+    <p class="@messageSucces">@Message</p>
+    <div class="form-group">
+        <label for="mail">E-mail</label>
+        <InputText type="email" class="form-control" id="mail" placeholder="Enter e-mail" @bind-Value="@model.Email"></InputText>
+        <label for="Name">First Name</label>
+        <InputText class="form-control" id="Name" placeholder="Enter first name" @bind-Value="@model.Name"></InputText>
+        <label for="LastName">Last Name</label>
+        <InputText class="form-control" id="LastName" placeholder="Enter last name" @bind-Value="@model.LastName"></InputText>
+        <label for="password">Password</label>
+        <InputText type="password" class="form-control" id="password" placeholder="Enter password" @bind-Value="@model.Password"></InputText>
+        <label for="adress">Adress</label>
+        <InputText class="form-control" id="adress" placeholder="Enter adress" @bind-Value="@model.Adresse"></InputText>
+        <label for="zip">Zip Code</label>
+        <InputNumber class="form-control" id="zip" placeholder="Enter zip code" @bind-Value="@model.PostNr.PostNr"></InputNumber>
+        <label for="distrikt">District</label>
+        <InputText class="form-control" id="distrikt" placeholder="Enter district" @bind-Value="@model.PostNr.Distrikt"></InputText><br />
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </div>
+</EditForm>
+@code {
+    private string Message = string.Empty;
+    private string messageSucces = string.Empty;
+    private Model.WS_User model = new Model.WS_User();
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        model.PostNr = new Model.WS_Post();
+    }
+    private async Task SuccesSubmit()
+    {
+        try
+        {
+            await service.InsertUser(model);
+            Message = "Account Created :-)";
+            messageSucces = "text-success";
+
+        }
+        catch(Exception e)
+        {
+            messageSucces = "text-danger";
+            Message = e.Message;
+        }
+    }
+}
